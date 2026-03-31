@@ -86,6 +86,7 @@ async def shutdown_event():
 
 
 # API endpoints
+@app.post("/v1/responses")
 @app.post("/responses")
 async def create_response(request: Request):
     """
@@ -289,6 +290,10 @@ async def create_response(request: Request):
                             # If we don't have any tools either, remove that key
                             chat_request.pop("tools", None)
                             logger.info("No tools or functions available, sending without them")
+                    # Strip params not supported by chat completions endpoints
+                    chat_request.pop("reasoning", None)
+                    chat_request.pop("metadata", None)
+                    chat_request.pop("user", None)
                     # Log the initial Chat Completions request payload
                     logger.info(f"Sending Chat Completions request: {json.dumps(chat_request)}")
                     client = await LLMClient.get_client()

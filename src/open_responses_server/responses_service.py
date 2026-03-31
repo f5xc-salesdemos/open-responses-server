@@ -275,32 +275,15 @@ def convert_responses_to_chat_completions(request_data: dict) -> dict:
     if "tool_choice" in request_data:
         chat_request["tool_choice"] = request_data["tool_choice"]
     
-    # Handle reasoning parameter - only include if it has actual values (not just None/null)
+    # Strip params not supported by chat completions endpoints
     if "reasoning" in request_data:
-        reasoning = request_data["reasoning"]
-        # Only include reasoning if it has actual non-null values
-        if isinstance(reasoning, dict) and any(v is not None for v in reasoning.values()):
-            chat_request["reasoning"] = reasoning
-            logger.info(f"[TOOL-CONVERSION] Including reasoning parameter: {reasoning}")
-        else:
-            logger.info("[TOOL-CONVERSION] Skipping reasoning parameter (all values are null)")
-    
-    # Add optional parameters if they exist
-    for key in ["user", "metadata"]:
-        if key in request_data and request_data[key] is not None:
-            chat_request[key] = request_data[key]
-    
-    # Final cleanup - ensure reasoning is completely removed if it has null values
-    if "reasoning" in chat_request:
-        reasoning = chat_request["reasoning"]
-        if isinstance(reasoning, dict) and all(v is None for v in reasoning.values()):
-            chat_request.pop("reasoning", None)
-            logger.info("[TOOL-CONVERSION] Removed reasoning parameter with all null values from chat_request")
-    
+        logger.info(f"[TOOL-CONVERSION] Stripping reasoning parameter: {request_data['reasoning']}")
+    chat_request.pop("reasoning", None)
+    chat_request.pop("metadata", None)
+    chat_request.pop("user", None)
+
     # Log final chat_request for debugging
     logger.info(f"[TOOL-CONVERSION] Final chat_request keys: {list(chat_request.keys())}")
-    if "reasoning" in chat_request:
-        logger.warning(f"[TOOL-CONVERSION] WARNING: reasoning parameter still present: {chat_request['reasoning']}")
     
     # Validate message sequence before sending to API
     validated_messages = validate_message_sequence(messages)

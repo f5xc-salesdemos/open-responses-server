@@ -10,12 +10,8 @@ async def _handle_non_streaming_request(client: LLMClient, request_data: dict):
     messages = list(request_data.get("messages", []))
     current_request_data = request_data.copy()
     
-    # Remove reasoning parameter if it has null values
-    if "reasoning" in current_request_data:
-        reasoning = current_request_data["reasoning"]
-        if isinstance(reasoning, dict) and all(v is None for v in reasoning.values()):
-            current_request_data.pop("reasoning", None)
-            logger.info("[CHAT-COMPLETIONS-NON-STREAM] Removed reasoning parameter with null values")
+    # Strip reasoning parameter - not supported by chat completions endpoints
+    current_request_data.pop("reasoning", None)
     
     for _ in range(MAX_TOOL_CALL_ITERATIONS):
         current_request_data["messages"] = messages
@@ -92,12 +88,8 @@ async def _handle_streaming_request(client: LLMClient, request_data: dict) -> St
     non_stream_request_data = request_data.copy()
     non_stream_request_data["stream"] = False
 
-    # Remove reasoning parameter if it has null values
-    if "reasoning" in non_stream_request_data:
-        reasoning = non_stream_request_data["reasoning"]
-        if isinstance(reasoning, dict) and all(v is None for v in reasoning.values()):
-            non_stream_request_data.pop("reasoning", None)
-            logger.info("[CHAT-COMPLETIONS-STREAM] Removed reasoning parameter with null values from non-stream request")
+    # Strip reasoning parameter - not supported by chat completions endpoints
+    non_stream_request_data.pop("reasoning", None)
 
     for _ in range(MAX_TOOL_CALL_ITERATIONS):
         try:
@@ -157,12 +149,8 @@ async def _handle_streaming_request(client: LLMClient, request_data: dict) -> St
                 stream_request_data["messages"] = messages
                 stream_request_data["stream"] = True
 
-                # Remove reasoning parameter if it has null values
-                if "reasoning" in stream_request_data:
-                    reasoning = stream_request_data["reasoning"]
-                    if isinstance(reasoning, dict) and all(v is None for v in reasoning.values()):
-                        stream_request_data.pop("reasoning", None)
-                        logger.info("[CHAT-COMPLETIONS-STREAM] Removed reasoning parameter with null values from final stream request")
+                # Strip reasoning parameter - not supported by chat completions endpoints
+                stream_request_data.pop("reasoning", None)
 
                 async def stream_proxy():
                     try:
